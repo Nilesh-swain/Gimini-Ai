@@ -1,17 +1,54 @@
-import { GoogleGenAI } from "@google/genai";
+import {
+  GoogleGenerativeAI,
+  HarmCategory,
+  HarmBlockThreshold,
+} from "@google/generative-ai";
 
-const ai = new GoogleGenAI({
-  apiKey: "AIzaSyCKwxkM-fI1vq0-EdEvLlPNbMglC67xE9s" // use your real key or env var
-});
+const MODEL_NAME = "gemini-2.0-flash";
 
-async function main() {
-  const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" }); // or "gemini-pro" etc.
-  const result = await model.generateContent("Explain how AI works in a few words");
+// Paste Your API KEY Below
+const API_KEY = "Add-Your-Key";
 
-  const response = await result.response;
-  const text = response.candidates[0].content.parts[0].text;
+async function runChat(prompt) {
+  const genAI = new GoogleGenerativeAI(API_KEY);
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-  console.log(text);
+  const generationConfig = {
+    temperature: 0.75,
+    topK: 1,
+    topP: 1,
+    maxOutputTokens: 2048,
+  };
+
+  const safetySettings = [
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    },
+  ];
+
+  const chat = model.startChat({
+    generationConfig,
+    safetySettings,
+    history: [
+    ],
+  });
+
+  const result = await chat.sendMessage(prompt);
+  const response = result.response;
+  return response.text();
 }
 
-main();
+export default runChat;
