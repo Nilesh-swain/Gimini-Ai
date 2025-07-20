@@ -1,54 +1,41 @@
+const apikey = "AIzaSyCRUsSgkdtdG9lUwALrgl68x65ue71kE2E"
+
+// To run this code you need to install the following dependencies:
+// npm install @google/genai mime
+// npm install -D @types/node
+
 import {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} from "@google/generative-ai";
+  GoogleGenAI,
+} from '@google/genai';
 
-const MODEL_NAME = "gemini-2.0-flash";
-
-// Paste Your API KEY Below
-const API_KEY = "Add-Your-Key";
-
-async function runChat(prompt) {
-  const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-
-  const generationConfig = {
-    temperature: 0.75,
-    topK: 1,
-    topP: 1,
-    maxOutputTokens: 2048,
+async function main() {
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+  });
+  const config = {
+    responseMimeType: 'text/plain',
   };
-
-  const safetySettings = [
+  const model = 'gemini-2.0-flash';
+  const contents = [
     {
-      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+      role: 'user',
+      parts: [
+        {
+          text: `INSERT_INPUT_HERE`,
+        },
+      ],
     },
   ];
 
-  const chat = model.startChat({
-    generationConfig,
-    safetySettings,
-    history: [
-    ],
+  const response = await ai.models.generateContentStream({
+    model,
+    config,
+    contents,
   });
-
-  const result = await chat.sendMessage(prompt);
-  const response = result.response;
-  return response.text();
+  let fileIndex = 0;
+  for await (const chunk of response) {
+    console.log(chunk.text);
+  }
 }
 
-export default runChat;
+main();
